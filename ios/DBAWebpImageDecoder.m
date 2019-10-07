@@ -1,7 +1,5 @@
 #import "DBAWebpImageDecoder.h"
-#import "RCTWebpAnimatedImage.h"
-#include "WebP/decode.h"
-#include "WebP/demux.h"
+#import <SDWebImageWebPCoder/SDWebImageWebPCoder.h>
 
 @implementation DBAWebpImageDecoder
 
@@ -9,28 +7,24 @@ RCT_EXPORT_MODULE()
 
 - (BOOL)canDecodeImageData:(NSData *)imageData
 {
-    int result = WebPGetInfo([imageData bytes], [imageData length], NULL, NULL);
-    if (result == 0) {
-        return NO;
-    } else {
-        return YES;
-    }
+    return [[SDImageWebPCoder sharedCoder] canDecodeFromData:imageData];
 }
 
 - (RCTImageLoaderCancellationBlock)decodeImageData:(NSData *)imageData
                                               size:(CGSize)size
                                              scale:(CGFloat)scale
-                                        resizeMode:(UIViewContentMode)resizeMode
+                                        resizeMode:(RCTResizeMode)resizeMode
                                  completionHandler:(RCTImageLoaderCompletionBlock)completionHandler
 {
-  RCTWebpAnimatedImage *image = [[RCTWebpAnimatedImage alloc] initWithData:imageData scale:scale];
-  
-  if (!image) {
-    completionHandler(nil, nil);
+    UIImage *image = [[SDImageWebPCoder sharedCoder] decodedImageWithData:imageData options:nil];
+
+    if (!image) {
+      completionHandler(nil, nil);
+      return ^{};
+    }
+
+    completionHandler(nil, image);
     return ^{};
-  }
-  
-  completionHandler(nil, image);
-  return ^{};
 }
+
 @end
